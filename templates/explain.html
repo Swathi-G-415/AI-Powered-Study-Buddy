@@ -1,0 +1,75 @@
+
+Explain · HTML
+{% extends "base.html" %}
+{% block title %}Concept Explainer — Study Buddy{% endblock %}
+{% block content %}
+ 
+<div class="tool-page">
+  <div class="tool-header">
+    <div class="tool-icon">🧠</div>
+    <h1>Concept Explainer</h1>
+    <p>Enter any topic and get a clear, structured explanation tailored to your level.</p>
+  </div>
+ 
+  <div class="tool-card">
+    <div class="form-group">
+      <label for="topic">What do you want to understand?</label>
+      <input type="text" id="topic" class="input-field" placeholder="e.g. Photosynthesis, Newton's Laws, Machine Learning..." />
+    </div>
+    <div class="form-group">
+      <label>Your level</label>
+      <div class="option-group">
+        <button class="option-btn active" data-value="beginner" onclick="selectOption(this, 'level')">Beginner</button>
+        <button class="option-btn" data-value="intermediate" onclick="selectOption(this, 'level')">Intermediate</button>
+        <button class="option-btn" data-value="advanced" onclick="selectOption(this, 'level')">Advanced</button>
+      </div>
+    </div>
+    <button class="btn-primary btn-full" onclick="explainConcept()">
+      <span class="btn-text">Explain This Concept</span>
+      <span class="btn-loading hidden">Thinking...</span>
+    </button>
+  </div>
+ 
+  <div class="result-area hidden" id="resultArea">
+    <div class="result-header">
+      <span class="result-label">Explanation</span>
+      <button class="copy-btn" onclick="copyResult()">Copy</button>
+    </div>
+    <div class="result-content markdown-output" id="resultContent"></div>
+  </div>
+ 
+  <div class="error-area hidden" id="errorArea"></div>
+</div>
+ 
+{% endblock %}
+{% block scripts %}
+<script>
+let selectedLevel = "beginner";
+ 
+function explainConcept() {
+  const topic = document.getElementById("topic").value.trim();
+  if (!topic) { showError("Please enter a topic."); return; }
+  const btn = document.querySelector(".btn-primary");
+  setLoading(btn, true);
+  clearResults();
+ 
+  fetch("/api/explain", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({ topic, level: selectedLevel })
+  })
+  .then(r => r.json())
+  .then(data => {
+    setLoading(btn, false);
+    if (data.error) { showError(data.error); return; }
+    showResult(data.result);
+  })
+  .catch(() => { setLoading(btn, false); showError("Something went wrong. Try again."); });
+}
+ 
+document.getElementById("topic").addEventListener("keydown", e => {
+  if (e.key === "Enter") explainConcept();
+});
+</script>
+{% endblock %}
+ 
