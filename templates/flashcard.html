@@ -1,0 +1,143 @@
+
+Flashcards · HTML
+{% extends "base.html" %}
+{% block title %}Flashcard Maker — Study Buddy{% endblock %}
+{% block content %}
+ 
+<div class="tool-page">
+  <div class="tool-header">
+    <div class="tool-icon">🃏</div>
+    <h1>Flashcard Maker</h1>
+    <p>Enter a topic or paste notes and get an interactive flashcard deck with memory hints.</p>
+  </div>
+ 
+  <div class="tool-card" id="flashSetup">
+    <div class="form-group">
+      <label for="content">Topic or notes</label>
+      <textarea id="content" class="input-field textarea-field" rows="5" placeholder="e.g. 'Mitosis stages' or paste your biology notes here..."></textarea>
+    </div>
+    <div class="form-group">
+      <label for="numCards">Number of cards</label>
+      <select id="numCards" class="input-field select-field">
+        <option value="6">6 Cards</option>
+        <option value="8" selected>8 Cards</option>
+        <option value="12">12 Cards</option>
+        <option value="15">15 Cards</option>
+      </select>
+    </div>
+    <button class="btn-primary btn-full" onclick="generateFlashcards()">
+      <span class="btn-text">Create Flashcards</span>
+      <span class="btn-loading hidden">Generating cards...</span>
+    </button>
+  </div>
+ 
+  <div class="error-area hidden" id="errorArea"></div>
+ 
+  <div class="flashcard-area hidden" id="flashcardArea">
+    <div class="fc-controls">
+      <button class="btn-ghost" onclick="prevCard()">← Prev</button>
+      <span class="fc-counter" id="fcCounter">1 / 8</span>
+      <button class="btn-ghost" onclick="nextCard()">Next →</button>
+    </div>
+ 
+    <div class="fc-wrapper">
+      <div class="fc-card" id="fcCard" onclick="flipCard()">
+        <div class="fc-front" id="fcFront"></div>
+        <div class="fc-back hidden" id="fcBack"></div>
+      </div>
+      <p class="fc-flip-hint">Click card to flip</p>
+    </div>
+ 
+    <div class="fc-hint" id="fcHint"></div>
+ 
+    <div class="fc-all hidden" id="fcAll"></div>
+    <button class="btn-ghost btn-full" onclick="toggleAllCards()">View All Cards</button>
+    <button class="btn-ghost btn-full" style="margin-top:8px" onclick="location.reload()">Make New Deck</button>
+  </div>
+</div>
+ 
+{% endblock %}
+{% block scripts %}
+<script>
+let cards = [];
+let currentCard = 0;
+let isFlipped = false;
+ 
+function generateFlashcards() {
+  const content = document.getElementById("content").value.trim();
+  if (!content) { showError("Please enter a topic or paste some notes."); return; }
+  const numCards = document.getElementById("numCards").value;
+  const btn = document.querySelector(".btn-primary");
+  setLoading(btn, true);
+  clearResults();
+ 
+  fetch("/api/flashcards", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({ content, num_cards: numCards })
+  })
+  .then(r => r.json())
+  .then(data => {
+    setLoading(btn, false);
+    if (data.error) { showError(data.error); return; }
+    cards = data.flashcards;
+    currentCard = 0;
+    showFlashcards();
+  })
+  .catch(() => { setLoading(btn, false); showError("Something went wrong. Try again."); });
+}
+ 
+function showFlashcards() {
+  document.getElementById("flashcardArea").classList.remove("hidden");
+  document.getElementById("flashSetup").style.opacity = "0.5";
+  renderCard();
+}
+ 
+function renderCard() {
+  const card = cards[currentCard];
+  isFlipped = false;
+  document.getElementById("fcFront").innerHTML = `<div class="fc-label">Question</div><div class="fc-text">${card.front}</div>`;
+  document.getElementById("fcBack").innerHTML = `<div class="fc-label">Answer</div><div class="fc-text">${card.back}</div>`;
+  document.getElementById("fcHint").innerHTML = card.hint ? `<span class="hint-label">💡 Hint:</span> ${card.hint}` : "";
+  document.getElementById("fcCounter").textContent = `${currentCard + 1} / ${cards.length}`;
+  document.getElementById("fcCard").classList.remove("flipped");
+  document.getElementById("fcFront").classList.remove("hidden");
+  document.getElementById("fcBack").classList.add("hidden");
+}
+ 
+function flipCard() {
+  isFlipped = !isFlipped;
+  const card = document.getElementById("fcCard");
+  if (isFlipped) {
+    card.classList.add("flipped");
+    document.getElementById("fcFront").classList.add("hidden");
+    document.getElementById("fcBack").classList.remove("hidden");
+  } else {
+    card.classList.remove("flipped");
+    document.getElementById("fcFront").classList.remove("hidden");
+    document.getElementById("fcBack").classList.add("hidden");
+  }
+}
+ 
+function prevCard() { if (currentCard > 0) { currentCard--; renderCard(); } }
+function nextCard() { if (currentCard < cards.length - 1) { currentCard++; renderCard(); } }
+ 
+function toggleAllCards() {
+  const el = document.getElementById("fcAll");
+  if (el.classList.contains("hidden")) {
+    let html = '<div class="fc-all-grid">';
+    cards.forEach((c, i) => {
+      html += `<div class="fc-mini" onclick="currentCard=${i};renderCard();el.classList.add('hidden')">
+        <div class="fc-mini-q">${c.front}</div>
+        <div class="fc-mini-a">${c.back}</div>
+      </div>`;
+    });
+    html += "</div>";
+    el.innerHTML = html;
+    el.classList.remove("hidden");
+  } else {
+    el.classList.add("hidden");
+  }
+}
+</script>
+{% endblock %}
