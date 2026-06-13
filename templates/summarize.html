@@ -1,0 +1,75 @@
+
+Summarize · HTML
+{% extends "base.html" %}
+{% block title %}Note Summarizer — Study Buddy{% endblock %}
+{% block content %}
+ 
+<div class="tool-page">
+  <div class="tool-header">
+    <div class="tool-icon">📋</div>
+    <h1>Note Summarizer</h1>
+    <p>Paste your raw notes and get a clean, structured summary with key terms and study tips.</p>
+  </div>
+ 
+  <div class="tool-card">
+    <div class="form-group">
+      <label for="notes">Paste your notes</label>
+      <textarea id="notes" class="input-field textarea-field" rows="8" placeholder="Paste lecture notes, textbook paragraphs, or any study material here..."></textarea>
+      <div class="char-counter"><span id="charCount">0</span> characters</div>
+    </div>
+    <div class="form-group">
+      <label>Summary style</label>
+      <div class="option-group">
+        <button class="option-btn active" data-value="structured" onclick="selectOption(this, 'style')">Structured</button>
+        <button class="option-btn" data-value="concise" onclick="selectOption(this, 'style')">Concise</button>
+        <button class="option-btn" data-value="outline" onclick="selectOption(this, 'style')">Outline</button>
+      </div>
+    </div>
+    <button class="btn-primary btn-full" onclick="summarizeNotes()">
+      <span class="btn-text">Summarize Notes</span>
+      <span class="btn-loading hidden">Summarizing...</span>
+    </button>
+  </div>
+ 
+  <div class="result-area hidden" id="resultArea">
+    <div class="result-header">
+      <span class="result-label">Summary</span>
+      <button class="copy-btn" onclick="copyResult()">Copy</button>
+    </div>
+    <div class="result-content markdown-output" id="resultContent"></div>
+  </div>
+ 
+  <div class="error-area hidden" id="errorArea"></div>
+</div>
+ 
+{% endblock %}
+{% block scripts %}
+<script>
+let selectedStyle = "structured";
+ 
+document.getElementById("notes").addEventListener("input", function() {
+  document.getElementById("charCount").textContent = this.value.length;
+});
+ 
+function summarizeNotes() {
+  const notes = document.getElementById("notes").value.trim();
+  if (!notes) { showError("Please paste your notes."); return; }
+  const btn = document.querySelector(".btn-primary");
+  setLoading(btn, true);
+  clearResults();
+ 
+  fetch("/api/summarize", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({ notes, style: selectedStyle })
+  })
+  .then(r => r.json())
+  .then(data => {
+    setLoading(btn, false);
+    if (data.error) { showError(data.error); return; }
+    showResult(data.result);
+  })
+  .catch(() => { setLoading(btn, false); showError("Something went wrong. Try again."); });
+}
+</script>
+{% endblock %}
