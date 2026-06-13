@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{% block title %}AI Study Buddy{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+ 
+  <nav class="navbar">
+    <a href="/" class="nav-brand">
+      <span class="brand-icon">⚡</span>
+      <span class="brand-name">StudyBuddy<span class="brand-ai">.ai</span></span>
+    </a>
+    <div class="nav-links">
+      <a href="/explain" class="nav-link {% if request.path == '/explain' %}active{% endif %}">Explain</a>
+      <a href="/summarize" class="nav-link {% if request.path == '/summarize' %}active{% endif %}">Summarize</a>
+      <a href="/quiz" class="nav-link {% if request.path == '/quiz' %}active{% endif %}">Quiz</a>
+      <a href="/flashcards" class="nav-link {% if request.path == '/flashcards' %}active{% endif %}">Flashcards</a>
+    </div>
+    <button class="nav-mobile-toggle" onclick="toggleNav()">☰</button>
+  </nav>
+ 
+  <div class="mobile-menu" id="mobileMenu">
+    <a href="/explain">Explain</a>
+    <a href="/summarize">Summarize</a>
+    <a href="/quiz">Quiz</a>
+    <a href="/flashcards">Flashcards</a>
+  </div>
+ 
+  <main class="main-content">
+    {% block content %}{% endblock %}
+  </main>
+ 
+  <footer class="footer">
+    <p>Built for <strong>Edunet Foundation AI Internship</strong> &nbsp;·&nbsp; Powered by Claude AI</p>
+  </footer>
+ 
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>
