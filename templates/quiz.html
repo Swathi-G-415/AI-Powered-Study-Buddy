@@ -1,0 +1,173 @@
+
+Quiz · HTML
+{% extends "base.html" %}
+{% block title %}Quiz Generator — Study Buddy{% endblock %}
+{% block content %}
+ 
+<div class="tool-page">
+  <div class="tool-header">
+    <div class="tool-icon">✅</div>
+    <h1>Quiz Generator</h1>
+    <p>Generate an adaptive multiple-choice quiz on any topic. Get instant feedback and explanations.</p>
+  </div>
+ 
+  <div class="tool-card" id="quizSetup">
+    <div class="form-group">
+      <label for="topic">Quiz topic</label>
+      <input type="text" id="topic" class="input-field" placeholder="e.g. World War II, Algebra, DNA Replication..." />
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Difficulty</label>
+        <div class="option-group">
+          <button class="option-btn active" data-value="easy" onclick="selectOption(this, 'difficulty')">Easy</button>
+          <button class="option-btn" data-value="medium" onclick="selectOption(this, 'difficulty')">Medium</button>
+          <button class="option-btn" data-value="hard" onclick="selectOption(this, 'difficulty')">Hard</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="numQ">Number of questions</label>
+        <select id="numQ" class="input-field select-field">
+          <option value="5">5 Questions</option>
+          <option value="8">8 Questions</option>
+          <option value="10">10 Questions</option>
+        </select>
+      </div>
+    </div>
+    <button class="btn-primary btn-full" onclick="generateQuiz()">
+      <span class="btn-text">Generate Quiz</span>
+      <span class="btn-loading hidden">Building quiz...</span>
+    </button>
+  </div>
+ 
+  <div class="error-area hidden" id="errorArea"></div>
+ 
+  <div class="quiz-area hidden" id="quizArea">
+    <div class="quiz-progress">
+      <span id="progressText">Question 1 of 5</span>
+      <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    </div>
+    <div id="questionContainer"></div>
+    <div class="quiz-nav">
+      <button class="btn-ghost" id="prevBtn" onclick="prevQuestion()" style="display:none">← Previous</button>
+      <button class="btn-primary" id="nextBtn" onclick="nextQuestion()">Next →</button>
+    </div>
+    <div class="quiz-results hidden" id="quizResults"></div>
+  </div>
+</div>
+ 
+{% endblock %}
+{% block scripts %}
+<script>
+let questions = [];
+let current = 0;
+let answers = {};
+let selectedDifficulty = "easy";
+ 
+function generateQuiz() {
+  const topic = document.getElementById("topic").value.trim();
+  if (!topic) { showError("Please enter a topic."); return; }
+  const numQ = document.getElementById("numQ").value;
+  const btn = document.querySelector(".btn-primary");
+  setLoading(btn, true);
+  clearResults();
+ 
+  fetch("/api/quiz", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({ topic, num_questions: numQ, difficulty: selectedDifficulty })
+  })
+  .then(r => r.json())
+  .then(data => {
+    setLoading(btn, false);
+    if (data.error) { showError(data.error); return; }
+    questions = data.questions;
+    current = 0;
+    answers = {};
+    startQuiz();
+  })
+  .catch(() => { setLoading(btn, false); showError("Something went wrong. Try again."); });
+}
+ 
+function startQuiz() {
+  document.getElementById("quizArea").classList.remove("hidden");
+  document.getElementById("quizSetup").style.opacity = "0.5";
+  renderQuestion();
+}
+ 
+function renderQuestion() {
+  const q = questions[current];
+  const total = questions.length;
+  document.getElementById("progressText").textContent = `Question ${current + 1} of ${total}`;
+  document.getElementById("progressFill").style.width = `${((current + 1) / total) * 100}%`;
+ 
+  const userAnswer = answers[current];
+  const isAnswered = userAnswer !== undefined;
+ 
+  let html = `<div class="quiz-question">
+    <div class="question-num">Q${current + 1}</div>
+    <h3 class="question-text">${q.question}</h3>
+    <div class="options-list">`;
+ 
+  q.options.forEach(opt => {
+    let cls = "quiz-option";
+    if (isAnswered) {
+      if (opt === q.answer) cls += " correct";
+      else if (opt === userAnswer && opt !== q.answer) cls += " wrong";
+      else cls += " dimmed";
+    }
+    html += `<button class="${cls}" onclick="${isAnswered ? '' : `selectAnswer('${opt.replace(/'/g, "\\'")}', ${current})`}">${opt}</button>`;
+  });
+ 
+  html += `</div>`;
+ 
+  if (isAnswered) {
+    const correct = userAnswer === q.answer;
+    html += `<div class="explanation ${correct ? 'explanation--correct' : 'explanation--wrong'}">
+      <strong>${correct ? '✓ Correct!' : '✗ Incorrect'}</strong> ${q.explanation}
+    </div>`;
+  }
+ 
+  html += `</div>`;
+  document.getElementById("questionContainer").innerHTML = html;
+ 
+  document.getElementById("prevBtn").style.display = current > 0 ? "block" : "none";
+  const nextBtn = document.getElementById("nextBtn");
+  if (current === questions.length - 1) {
+    nextBtn.textContent = "See Results";
+    nextBtn.onclick = showResults;
+  } else {
+    nextBtn.textContent = "Next →";
+    nextBtn.onclick = nextQuestion;
+  }
+}
+ 
+function selectAnswer(option, idx) {
+  if (answers[idx] !== undefined) return;
+  answers[idx] = option;
+  renderQuestion();
+}
+ 
+function nextQuestion() { if (current < questions.length - 1) { current++; renderQuestion(); } }
+function prevQuestion() { if (current > 0) { current--; renderQuestion(); } }
+ 
+function showResults() {
+  const total = questions.length;
+  const correct = questions.filter((q, i) => answers[i] === q.answer).length;
+  const pct = Math.round((correct / total) * 100);
+  const grade = pct >= 90 ? "Excellent!" : pct >= 70 ? "Good job!" : pct >= 50 ? "Keep practicing!" : "Study more and try again!";
+ 
+  document.getElementById("questionContainer").classList.add("hidden");
+  document.getElementById("quizResults").classList.remove("hidden");
+  document.getElementById("quizNav") && (document.getElementById("quizNav").style.display = "none");
+ 
+  document.getElementById("quizResults").innerHTML = `
+    <div class="results-card">
+      <div class="results-score">${pct}%</div>
+      <div class="results-grade">${grade}</div>
+      <div class="results-detail">${correct} out of ${total} correct</div>
+      <button class="btn-primary" onclick="location.reload()">Try Another Quiz</button>
+    </div>`;
+}
+</script>
+{% endblock %}
