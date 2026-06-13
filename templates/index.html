@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}AI Study Buddy — Learn Smarter{% endblock %}
+{% block content %}
+ 
+<section class="hero">
+  <div class="hero-badge">Edunet Foundation · AI Internship Project</div>
+  <h1 class="hero-title">Your personal<br><span class="hero-accent">AI Study Buddy</span></h1>
+  <p class="hero-subtitle">Understand any concept, summarize notes, take adaptive quizzes, and build flashcard decks — all powered by AI, in seconds.</p>
+  <div class="hero-cta">
+    <a href="/explain" class="btn-primary">Start Learning</a>
+    <a href="#features" class="btn-ghost">See Features</a>
+  </div>
+  <div class="hero-stats">
+    <div class="stat"><span class="stat-num">4</span><span class="stat-label">AI Tools</span></div>
+    <div class="stat-divider"></div>
+    <div class="stat"><span class="stat-num">∞</span><span class="stat-label">Topics</span></div>
+    <div class="stat-divider"></div>
+    <div class="stat"><span class="stat-num">3</span><span class="stat-label">Difficulty Levels</span></div>
+  </div>
+</section>
+ 
+<section class="features" id="features">
+  <div class="section-eyebrow">What you can do</div>
+  <h2 class="section-title">Four tools, one goal: <em>understand better</em></h2>
+ 
+  <div class="feature-grid">
+    <a href="/explain" class="feature-card">
+      <div class="feature-icon">🧠</div>
+      <h3>Concept Explainer</h3>
+      <p>Enter any topic and get a clear, level-appropriate explanation with real-world analogies — from photosynthesis to neural networks.</p>
+      <span class="feature-link">Try it →</span>
+    </a>
+    <a href="/summarize" class="feature-card">
+      <div class="feature-icon">📋</div>
+      <h3>Note Summarizer</h3>
+      <p>Paste messy lecture notes and get a clean, structured summary with key terms defined and study tips included.</p>
+      <span class="feature-link">Try it →</span>
+    </a>
+    <a href="/quiz" class="feature-card feature-card--highlight">
+      <div class="feature-badge">Popular</div>
+      <div class="feature-icon">✅</div>
+      <h3>Quiz Generator</h3>
+      <p>Auto-generate multiple-choice quizzes on any subject. Get instant feedback and explanations for every answer.</p>
+      <span class="feature-link">Try it →</span>
+    </a>
+    <a href="/flashcards" class="feature-card">
+      <div class="feature-icon">🃏</div>
+      <h3>Flashcard Maker</h3>
+      <p>Turn any topic or notes into an interactive flashcard deck with memory hints and flip animations for active recall.</p>
+      <span class="feature-link">Try it →</span>
+    </a>
+  </div>
+</section>
+ 
+<section class="how-it-works">
+  <div class="section-eyebrow">How it works</div>
+  <h2 class="section-title">Three steps to mastery</h2>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">01</div>
+      <h4>Enter your topic or notes</h4>
+      <p>Type a concept name or paste raw study notes from any subject.</p>
+    </div>
+    <div class="step-arrow">→</div>
+    <div class="step">
+      <div class="step-num">02</div>
+      <h4>Choose your learning mode</h4>
+      <p>Pick between explanation, summary, quiz, or flashcards based on what you need.</p>
+    </div>
+    <div class="step-arrow">→</div>
+    <div class="step">
+      <div class="step-num">03</div>
+      <h4>Learn and retain</h4>
+      <p>Get AI-generated content tailored to your level. Study, test yourself, repeat.</p>
+    </div>
+  </div>
+</section>
+ 
+{% endblock %}
